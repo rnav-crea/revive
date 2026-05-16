@@ -27,7 +27,7 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
         MeshDatabaseProvider.getDatabase(application)
     }
 
-    private lateinit var bluetoothMeshManager: BluetoothMeshManager
+    private lateinit var nearbyMeshManager: NearbyMeshManager
     private lateinit var routingManager: MeshRoutingManager
     private lateinit var encryptionManager: MeshEncryptionManager
 
@@ -113,14 +113,14 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
             _currentUser.value = user
             
             // Initialize managers
-            bluetoothMeshManager = BluetoothMeshManager(getApplication(), meshDatabase)
+            nearbyMeshManager = NearbyMeshManager(getApplication(), meshDatabase)
             routingManager = MeshRoutingManager(meshDatabase, user.id)
             encryptionManager = MeshEncryptionManager(meshDatabase, user.id)
             
             // Initialize core systems
             encryptionManager.initialize()
             routingManager.initialize()
-            bluetoothMeshManager.initialize(user)
+            nearbyMeshManager.initialize(user)
             
             // Set up data flows
             setupDataFlows()
@@ -156,7 +156,7 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
                 messageType = MessageType.TEXT
             )
             
-            val success = bluetoothMeshManager.sendMessage(message)
+            val success = nearbyMeshManager.sendMessage(message)
             
             if (success) {
                 _events.emit(MeshChatEvent.MessageSent(message))
@@ -215,8 +215,8 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
     private fun setupDataFlows() {
         // Monitor network status
         viewModelScope.launch {
-            if (::bluetoothMeshManager.isInitialized) {
-                bluetoothMeshManager.networkStatus.collect { status ->
+            if (::nearbyMeshManager.isInitialized) {
+                nearbyMeshManager.networkStatus.collect { status ->
                     _networkStatus.value = status
                     _uiState.value = _uiState.value.copy(
                         isNetworkActive = status.isActive,
@@ -231,8 +231,8 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
 
         // Monitor discovered users
         viewModelScope.launch {
-            if (::bluetoothMeshManager.isInitialized) {
-                bluetoothMeshManager.discoveredUsers.collect { users ->
+            if (::nearbyMeshManager.isInitialized) {
+                nearbyMeshManager.discoveredUsers.collect { users ->
                     _discoveredUsers.value = users
                 }
             }
@@ -240,8 +240,8 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
 
         // Monitor incoming messages
         viewModelScope.launch {
-            if (::bluetoothMeshManager.isInitialized) {
-                bluetoothMeshManager.messageEvents.collect { message ->
+            if (::nearbyMeshManager.isInitialized) {
+                nearbyMeshManager.messageEvents.collect { message ->
                     handleIncomingMessage(message)
                 }
             }
@@ -343,8 +343,8 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
     fun startUserDiscovery() {
         viewModelScope.launch {
             try {
-                if (::bluetoothMeshManager.isInitialized) {
-                    bluetoothMeshManager.triggerDiscovery()
+                if (::nearbyMeshManager.isInitialized) {
+                    nearbyMeshManager.triggerDiscovery()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to start user discovery", e)
@@ -356,7 +356,7 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
     fun stopUserDiscovery() {
         viewModelScope.launch {
             try {
-                // BluetoothMeshManager automatically manages discovery cycles
+                // NearbyMeshManager automatically manages discovery cycles
                 Log.d(TAG, "Discovery stop requested (handled automatically)")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to stop user discovery", e)
@@ -383,8 +383,8 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
                 messageType = MessageType.SOS_EMERGENCY
             )
             
-            val success = if (::bluetoothMeshManager.isInitialized) {
-                bluetoothMeshManager.sendMessage(sosMessage)
+            val success = if (::nearbyMeshManager.isInitialized) {
+                nearbyMeshManager.sendMessage(sosMessage)
             } else false
             
             if (success) {
@@ -407,8 +407,8 @@ class MeshChatViewModel(application: Application) : AndroidViewModel(application
         
         Log.d(TAG, "Shutting down mesh chat system")
         
-        if (::bluetoothMeshManager.isInitialized) {
-            bluetoothMeshManager.shutdown()
+        if (::nearbyMeshManager.isInitialized) {
+            nearbyMeshManager.shutdown()
         }
         
         if (::routingManager.isInitialized) {

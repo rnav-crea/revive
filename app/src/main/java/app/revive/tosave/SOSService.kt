@@ -3,7 +3,6 @@ package app.revive.tosave
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -12,24 +11,14 @@ import androidx.core.app.NotificationCompat
 
 class SOSService : Service() {
     
-    private lateinit var powerButtonReceiver: PowerButtonReceiver
     private var wakeLock: PowerManager.WakeLock? = null
     
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "SOS Service created")
         
-        // Initialize context provider
-        ApplicationContextProvider.initialize(this)
-        
-        // Initialize power button receiver
-        powerButtonReceiver = PowerButtonReceiver()
-        
         // Acquire wake lock to keep service running
         acquireWakeLock()
-        
-        // Register for power button events
-        registerPowerButtonReceiver()
         
         // Start foreground service
         startForegroundService()
@@ -45,11 +34,6 @@ class SOSService : Service() {
         Log.d(TAG, "SOS Service destroyed")
         
         // Cleanup
-        try {
-            unregisterReceiver(powerButtonReceiver)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error unregistering power button receiver", e)
-        }
         wakeLock?.release()
     }
     
@@ -99,15 +83,6 @@ class SOSService : Service() {
             "SOSService::WakeLock"
         )
         wakeLock?.acquire(10*60*1000L /*10 minutes*/)
-    }
-    
-    private fun registerPowerButtonReceiver() {
-        val intentFilter = IntentFilter().apply {
-            addAction(Intent.ACTION_SCREEN_ON)
-            addAction(Intent.ACTION_SCREEN_OFF)
-        }
-        registerReceiver(powerButtonReceiver, intentFilter)
-        Log.d(TAG, "Power button receiver registered")
     }
     
     fun notifySOSTriggered() {

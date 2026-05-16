@@ -71,9 +71,9 @@
             android:exported="false"
             android:foregroundServiceType="location" />
         
-        <!-- Power Button Receiver for SOS Detection -->
+        <!-- Power Button Receiver for SOS Detection (single consolidated receiver) -->
         <receiver
-            android:name=".PowerButtonReceiver"
+            android:name=".ImprovedPowerButtonReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter android:priority="1000">
@@ -81,31 +81,6 @@
                 <action android:name="android.intent.action.SCREEN_OFF" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.USER_PRESENT" />
-            </intent-filter>
-        </receiver>
-        
-        <!-- Improved Power Button Receiver -->
-        <receiver
-            android:name=".ImprovedPowerButtonReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter android:priority="1001">
-                <action android:name="android.intent.action.SCREEN_ON" />
-                <action android:name="android.intent.action.SCREEN_OFF" />
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.USER_PRESENT" />
-            </intent-filter>
-        </receiver>
-        
-        <!-- Legacy SOS Receiver (keeping for compatibility) -->
-        <receiver
-            android:name=".SOSReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.SCREEN_ON" />
-                <action android:name="android.intent.action.SCREEN_OFF" />
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
     </application>
